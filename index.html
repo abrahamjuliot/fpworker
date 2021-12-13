@@ -1,0 +1,127 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="style.css">
+	<title>fpworker</title>
+</head>
+<body>
+	<div id="fingerprint" class="grid"></div>
+	<script src="fpworker.js"></script>
+	<script>
+		;(async () => {
+			// helpers
+			const getHash = str => {
+				if (typeof str === 'undefined') return
+				const json = `${JSON.stringify(str)}`
+				const hash = json.split('').reduce((hash, char, i) => {
+					return Math.imul(31, hash) + json.charCodeAt(i) | 0
+				}, 0x811c9dc5)
+				return ('0000000' + (hash >>> 0).toString(16)).substr(-8)
+			}
+			const patch = (oldEl, newEl) => oldEl.parentNode.replaceChild(newEl, oldEl)
+			const html = (str, ...expressionSet) => {
+				const template = document.createElement('template')
+				template.innerHTML = str.map((s, i) => `${s}${expressionSet[i] || ''}`).join('')
+				return document.importNode(template.content, true)
+			}
+
+			// fingerprint
+			const fp = await fpworker
+			const getTemplate = data => {
+				const {
+					// Blink
+					canvas,
+					emojis,
+					fonts,
+					gpu,
+					userAgentData,
+					deviceMemory,
+					// Blink/Gecko
+					hardwareConcurrency,
+					// Blink/Gecko/WebKit
+					timeZone,
+					language,
+					languages,
+					userAgent,
+					platform,
+					engine
+				} = data || {}
+				const {
+					readAsArrayBuffer,
+					readAsBinaryString,
+					readAsDataURL,
+					readAsText
+				} = canvas || {}
+				const {
+					unique: uniqueEmojis,
+					metricSum: metricSumEmojis
+				} = emojis || {}
+				const {
+					architecture,
+					model,
+					platform: uaPlatform,
+					platformVersion,
+					uaFullVersion
+				} = userAgentData || {}
+				const {
+					supported: supportedFonts,
+					system: fontSystem
+				} = fonts || {}
+
+				return `
+					<div>engine: ${engine}</div>
+					<div>timeZone: ${timeZone}</div>
+					<div>language: ${language}</div>
+					<div>languages: ${languages}</div>
+					<div>platform: ${platform}</div>
+					<div>userAgent: ${userAgent}</div>
+
+					<div>hardwareConcurrency: ${hardwareConcurrency || ''}</div>
+
+					<div>deviceMemory: ${deviceMemory || ''}</div>
+					<div>gpu: ${gpu}</div>
+					
+					<div>fonts: ${supportedFonts}</div>
+					<div>font system: ${fontSystem}</div>
+					<div>ua platform: ${uaPlatform}</div>
+					<div>ua platformVersion: ${platformVersion}</div>
+					<div>ua architecture: ${architecture}</div>
+					<div>ua model: ${model}</div>
+					<div>ua uaFullVersion: ${uaFullVersion}</div>
+					<div>unique emojis: ${uniqueEmojis}</div>
+					<div>emoji sum: ${metricSumEmojis}</div>
+
+					<div>canvas readAsArrayBuffer: ${getHash(readAsArrayBuffer)}</div>
+					<div>canvas readAsBinaryString: ${getHash(readAsBinaryString)}</div>
+					<div>canvas readAsDataURL: ${getHash(readAsDataURL)}</div>
+					<div>canvas readAsText: ${getHash(readAsText)}</div>
+				`
+			}
+			return patch(document.getElementById('fingerprint'), html`
+				<div id="fingerprint" class="grid">
+					<div class="header"><h1>fpworker</h1></div>
+					<div class="window-scope">
+						<h2>Window</h2>
+						${getTemplate(fp.windowScope)}
+					</div>
+					<div class="dedicated-worker">
+						<h2>DedicatedWorkerGlobalScope</h2>
+						${getTemplate(fp.dedicatedWorker)}
+					</div>
+					<div class="service-worker">
+						<h2>ServiceWorkerGlobalScope</h2>
+						${getTemplate(fp.serviceWorker)}
+					</div>
+					<div class="shared-worker">
+						<h2>SharedWorkerGlobalScope</h2>
+						${getTemplate(fp.sharedWorker)}
+					</div>
+				</div>
+			`)
+		})()
+	</script>
+</body>
+</html>
