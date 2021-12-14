@@ -60,34 +60,45 @@
 					engine
 				} = data || {}
 
+				const getMismatchClass = (data, matcher, propName) => {
+					//matcher && propName == 'languages' && console.log(data[propName], matcher[propName])
+					return matcher && ((''+data[propName]) != (''+matcher[propName])) ? 'mismatch' : ''
+				}
+				const computeHTML = ({ data, matcher, propName, title = '', hash = false }) => {
+					const metric = data[propName]
+					return `
+					<div class="${getMismatchClass(data, matcher, propName)}">
+						${title || propName}: ${ hash ? getHash(metric) : metric }
+					</div>`
+				}
 				return `
-					<div class="fail">engine: ${engine}</div>
-					<div>timeZone: ${timeZone}</div>
-					<div>language: ${language}</div>
-					<div>languages: ${languages}</div>
-					<div>platform: ${platform}</div>
-					<div>userAgent: ${userAgent}</div>
+					${computeHTML({ data, matcher, propName: 'engine' })}
+					${computeHTML({ data, matcher, propName: 'timeZone' })}
+					${computeHTML({ data, matcher, propName: 'language' })}
+					${computeHTML({ data, matcher, propName: 'languages' })}
+					${computeHTML({ data, matcher, propName: 'platform' })}
+					${computeHTML({ data, matcher, propName: 'userAgent' })}
 
-					<div>hardwareConcurrency: ${hardwareConcurrency || ''}</div>
+					${computeHTML({ data, matcher, propName: 'hardwareConcurrency' })}
 
-					<div>deviceMemory: ${deviceMemory || ''}</div>
-					<div>gpu: ${gpu}</div>
-					
-					<div>fonts: ${fontsSupported}</div>
-					<div>font system: ${fontSystem}</div>
-					<div>ua platform: ${uaPlatform}</div>
-					<div>ua platformVersion: ${uaPlatformVersion}</div>
-					<div>ua architecture: ${uaArchitecture}</div>
-					<div>ua model: ${uaModel}</div>
-					<div>ua uaFullVersion: ${uaFullVersion}</div>
-					<div>emojis: ${emojiUnique.join('')}</div>
-					<div>emoji hash: ${getHash(emojiUnique)}</div>
-					<div>emoji sum: ${emojiSum}</div>
-					
-					<div>canvas readAsArrayBuffer: ${getHash(canvasReadAsArrayBuffer)}</div>
-					<div>canvas readAsBinaryString: ${getHash(canvasReadAsBinaryString)}</div>
-					<div>canvas readAsDataURL: ${getHash(canvasReadAsDataURL)}</div>
-					<div>canvas readAsText: ${getHash(canvasReadAsText)}</div>
+					${computeHTML({ data, matcher, propName: 'deviceMemory' })}
+					${computeHTML({ data, matcher, propName: 'gpu' })}
+
+					${computeHTML({ data, matcher, propName: 'fontsSupported', title: 'fonts' })}
+					${computeHTML({ data, matcher, propName: 'fontSystem', title: 'font system' })}
+					${computeHTML({ data, matcher, propName: 'uaPlatform', title: 'ua platform' })}
+					${computeHTML({ data, matcher, propName: 'uaPlatformVersion', title: 'ua platform version' })}
+					${computeHTML({ data, matcher, propName: 'uaArchitecture', title: 'ua architecture' })}
+					${computeHTML({ data, matcher, propName: 'uaModel', title: 'ua model' })}
+					${computeHTML({ data, matcher, propName: 'uaFullVersion', title: 'ua full version' })}
+					${computeHTML({ data, matcher, propName: 'emojiUnique', title: 'emojis' })}
+					${computeHTML({ data, matcher, propName: 'emojiUnique', title: 'emoji hash', hash: true })}
+					${computeHTML({ data, matcher, propName: 'emojiSum', title: 'emoji sum' })}
+
+					${computeHTML({ data, matcher, propName: 'canvasReadAsArrayBuffer', title: 'canvas array buffer', hash: true })}
+					${computeHTML({ data, matcher, propName: 'canvasReadAsBinaryString', title: 'canvas binary string', hash: true })}
+					${computeHTML({ data, matcher, propName: 'canvasReadAsDataURL', title: 'canvas data url', hash: true })}
+					${computeHTML({ data, matcher, propName: 'canvasReadAsText', title: 'canvas text', hash: true })}
 				`
 			}
 			return patch(document.getElementById('fingerprint'), html`
@@ -103,11 +114,11 @@
 					</div>
 					<div class="service-worker">
 						<h2>ServiceWorkerGlobalScope</h2>
-						${getTemplate({ data: fp.serviceWorker, matcher: fp.windowScopee })}
+						${getTemplate({ data: fp.serviceWorker, matcher: fp.windowScope })}
 					</div>
 					<div class="shared-worker">
 						<h2>SharedWorkerGlobalScope</h2>
-						${getTemplate({ data: fp.sharedWorker, matcher: fp.windowScopee })}
+						${getTemplate({ data: fp.sharedWorker, matcher: fp.windowScope })}
 					</div>
 				</div>
 			`)

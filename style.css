@@ -105,6 +105,13 @@ h3 {
 	color: #7b1c82
 }
 
+.mismatch {
+	background: #fff;
+}
+.service-worker .mismatch {
+	color: #bf3ab6;
+}
+
 @media (min-width: 650px) {
 	h1 {
 		font-size: 40px !important;

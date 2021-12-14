@@ -169,7 +169,7 @@ const fpworker = (async () => {
 							(systemHashMap[''+fontsSupported] || 'unknown')
 				)
 			)
-			return  { fontsSupported, fontSystem }
+			return  { fontsSupported: fontsSupported.sort(), fontSystem }
 		})
 
 		const getEmojis = () => {
@@ -247,7 +247,7 @@ const fpworker = (async () => {
 			// Blink/Gecko/WebKit
 			timeZone: ask(() => Intl.DateTimeFormat().resolvedOptions().timeZone),
 			language: navigator.language,
-			languages: navigator.languages,
+			languages: ''+navigator.languages,
 			userAgent: navigator.userAgent,
 			platform: navigator.platform,
 			engine: getEngine()
