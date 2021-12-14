@@ -80,7 +80,11 @@ const fpworker = (async () => {
 		const getFonts = () => ask(() => {
 			const windowsFonts = {
 				// https://docs.microsoft.com/en-us/typography/fonts/windows_11_font_list
-				'7': ['Lucida Console'], // default to 7
+				'7': [
+					'Cambria Math',
+					'Consolas',
+					'Lucida Console'
+				],
 				'8': [
 					'Aldhabi',
 					'Gadugi',
