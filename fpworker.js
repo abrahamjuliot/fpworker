@@ -156,11 +156,13 @@ const fpworker = (async () => {
 				const version = hashMap[hash]
 				return version ? `Windows ${version}` : undefined
 			}
-			
+			const hasAppleFonts = supported.find(x => appleFonts.includes(x))
+			const hasLinuxFonts = supported.find(x => linuxFonts.includes(x))
+			const windowsFontSystem = getWindowsVersion(windowsFonts, supported)
 			const system = (
-				getWindowsVersion(windowsFonts, supported) || (
-					supported.find(x => linuxFonts.includes(x))	? 'Linux' :
-						supported.find(x => appleFonts.includes(x)) ? 'Apple' :
+				windowsFontSystem || (
+					hasLinuxFonts	? 'Linux' :
+						hasAppleFonts ? 'Apple' :
 							'unknown'
 				)
 			)
