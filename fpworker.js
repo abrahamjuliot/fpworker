@@ -111,9 +111,9 @@ const fpworker = (async () => {
 				'Ubuntu' // ubuntu
 			]
 			const miscFonts = [
-				'Roboto', // chrome OS
+				'Baskerville', // android + mac
 				'Monaco', // android + mac
-				'Baskerville' // android + mac
+				'Roboto' // chrome OS			
 			]
 			const fontList = [
 				...Object.keys(windowsFonts).map(key => windowsFonts[key]).flat(),
@@ -156,14 +156,19 @@ const fpworker = (async () => {
 				const version = hashMap[hash]
 				return version ? `Windows ${version}` : undefined
 			}
+			const systemHashMap = {
+				'Arimo,Jomolhari,Roboto': 'Chrome OS',
+				'Arimo,Ubuntu': 'Ubuntu',
+				'Baskerville,Monaco': 'Android'
+			}
 			const hasAppleFonts = supported.find(x => appleFonts.includes(x))
 			const hasLinuxFonts = supported.find(x => linuxFonts.includes(x))
 			const windowsFontSystem = getWindowsVersion(windowsFonts, supported)
 			const system = (
 				windowsFontSystem || (
-					hasLinuxFonts	? 'Linux' :
+					hasLinuxFonts ? (systemHashMap[''+supported] || 'Linux') :
 						hasAppleFonts ? 'Apple' :
-							'unknown'
+							(systemHashMap[''+supported] || 'unknown')
 				)
 			)
 			return  { supported, system }
