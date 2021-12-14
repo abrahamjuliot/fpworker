@@ -159,8 +159,8 @@ const fpworker = (async () => {
 			
 			const system = (
 				getWindowsVersion(windowsFonts, supported) || (
-					supported.find(x => appleFonts.includes(x)) ? 'Apple' :
-						supported.find(x => linuxFonts.includes(x))	? 'Linux' :
+					supported.find(x => linuxFonts.includes(x))	? 'Linux' :
+						supported.find(x => appleFonts.includes(x)) ? 'Apple' :
 							'unknown'
 				)
 			)
