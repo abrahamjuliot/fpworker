@@ -30,14 +30,24 @@
 
 			// fingerprint
 			const fp = await fpworker
-			const getTemplate = data => {
+
+			const getTemplate = ({ data, matcher = undefined }) => {
 				const {
 					// Blink
-					canvas,
-					emojis,
-					fonts,
+					canvasReadAsArrayBuffer,
+					canvasReadAsBinaryString,
+					canvasReadAsDataURL,
+					canvasReadAsText,
+					emojiUnique,
+					emojiSum,
+					fontsSupported,
+					fontSystem,
 					gpu,
-					userAgentData,
+					uaArchitecture,
+					uaModel,
+					uaPlatform,
+					uaPlatformVersion,
+					uaFullVersion,
 					deviceMemory,
 					// Blink/Gecko
 					hardwareConcurrency,
@@ -49,30 +59,9 @@
 					platform,
 					engine
 				} = data || {}
-				const {
-					readAsArrayBuffer,
-					readAsBinaryString,
-					readAsDataURL,
-					readAsText
-				} = canvas || {}
-				const {
-					unique: uniqueEmojis,
-					metricSum: metricSumEmojis
-				} = emojis || {}
-				const {
-					architecture,
-					model,
-					platform: uaPlatform,
-					platformVersion,
-					uaFullVersion
-				} = userAgentData || {}
-				const {
-					supported: supportedFonts,
-					system: fontSystem
-				} = fonts || {}
 
 				return `
-					<div>engine: ${engine}</div>
+					<div class="fail">engine: ${engine}</div>
 					<div>timeZone: ${timeZone}</div>
 					<div>language: ${language}</div>
 					<div>languages: ${languages}</div>
@@ -84,21 +73,21 @@
 					<div>deviceMemory: ${deviceMemory || ''}</div>
 					<div>gpu: ${gpu}</div>
 					
-					<div>fonts: ${supportedFonts}</div>
+					<div>fonts: ${fontsSupported}</div>
 					<div>font system: ${fontSystem}</div>
 					<div>ua platform: ${uaPlatform}</div>
-					<div>ua platformVersion: ${platformVersion}</div>
-					<div>ua architecture: ${architecture}</div>
-					<div>ua model: ${model}</div>
+					<div>ua platformVersion: ${uaPlatformVersion}</div>
+					<div>ua architecture: ${uaArchitecture}</div>
+					<div>ua model: ${uaModel}</div>
 					<div>ua uaFullVersion: ${uaFullVersion}</div>
-					<div>emojis: ${uniqueEmojis.join('')}</div>
-					<div>emoji hash: ${getHash(uniqueEmojis)}</div>
-					<div>emoji sum: ${metricSumEmojis}</div>
-
-					<div>canvas readAsArrayBuffer: ${getHash(readAsArrayBuffer)}</div>
-					<div>canvas readAsBinaryString: ${getHash(readAsBinaryString)}</div>
-					<div>canvas readAsDataURL: ${getHash(readAsDataURL)}</div>
-					<div>canvas readAsText: ${getHash(readAsText)}</div>
+					<div>emojis: ${emojiUnique.join('')}</div>
+					<div>emoji hash: ${getHash(emojiUnique)}</div>
+					<div>emoji sum: ${emojiSum}</div>
+					
+					<div>canvas readAsArrayBuffer: ${getHash(canvasReadAsArrayBuffer)}</div>
+					<div>canvas readAsBinaryString: ${getHash(canvasReadAsBinaryString)}</div>
+					<div>canvas readAsDataURL: ${getHash(canvasReadAsDataURL)}</div>
+					<div>canvas readAsText: ${getHash(canvasReadAsText)}</div>
 				`
 			}
 			return patch(document.getElementById('fingerprint'), html`
@@ -106,19 +95,19 @@
 					<div class="header"><h1>fpworker</h1></div>
 					<div class="window-scope">
 						<h2>Window</h2>
-						${getTemplate(fp.windowScope)}
+						${getTemplate({ data: fp.windowScope })}
 					</div>
 					<div class="dedicated-worker">
 						<h2>DedicatedWorkerGlobalScope</h2>
-						${getTemplate(fp.dedicatedWorker)}
+						${getTemplate({ data: fp.dedicatedWorker, matcher: fp.windowScope })}
 					</div>
 					<div class="service-worker">
 						<h2>ServiceWorkerGlobalScope</h2>
-						${getTemplate(fp.serviceWorker)}
+						${getTemplate({ data: fp.serviceWorker, matcher: fp.windowScopee })}
 					</div>
 					<div class="shared-worker">
 						<h2>SharedWorkerGlobalScope</h2>
-						${getTemplate(fp.sharedWorker)}
+						${getTemplate({ data: fp.sharedWorker, matcher: fp.windowScopee })}
 					</div>
 				</div>
 			`)

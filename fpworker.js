@@ -26,18 +26,18 @@ const fpworker = (async () => {
 					return reader.addEventListener('loadend', () => resolve(reader.result))
 				})
 				const [
-					readAsArrayBuffer, readAsDataURL, readAsBinaryString, readAsText
+					canvasReadAsArrayBuffer, canvasReadAsBinaryString, canvasReadAsDataURL, canvasReadAsText
 				] = await Promise.all([
 					getRead('readAsArrayBuffer', blob),
-					getRead('readAsDataURL', blob),
 					getRead('readAsBinaryString', blob),
+					getRead('readAsDataURL', blob),
 					getRead('readAsText', blob),
 				])
 				return {
-					readAsArrayBuffer: String.fromCharCode.apply(null, new Uint8Array(readAsArrayBuffer)),
-					readAsBinaryString,
-					readAsDataURL,
-					readAsText
+					canvasReadAsArrayBuffer: String.fromCharCode.apply(null, new Uint8Array(canvasReadAsArrayBuffer)),
+					canvasReadAsBinaryString,
+					canvasReadAsDataURL,
+					canvasReadAsText
 				}
 			}
 			const width = 136, height = 30
@@ -124,16 +124,16 @@ const fpworker = (async () => {
 				.map(n => n.toString(36)).join('')
 			if (fontFaceSet.check(`0 '${getRandomValues(1)}'`)) return
 			fontFaceSet.clear()
-			const supported = fontList.filter(font => fontFaceSet.check(`0 '${font}'`))
+			const fontsSupported = fontList.filter(font => fontFaceSet.check(`0 '${font}'`))
 
-			const getWindowsVersion = (windowsFonts, supported) => {
+			const getWindowsVersion = (windowsFonts, fontsSupported) => {
 				const fontVersion = {
-					['11']: windowsFonts['11'].find(x => supported.includes(x)),
-					['10']: windowsFonts['10'].find(x => supported.includes(x)),
-					['8.1']: windowsFonts['8.1'].find(x => supported.includes(x)),
-					['8']: windowsFonts['8'].find(x => supported.includes(x)),
+					['11']: windowsFonts['11'].find(x => fontsSupported.includes(x)),
+					['10']: windowsFonts['10'].find(x => fontsSupported.includes(x)),
+					['8.1']: windowsFonts['8.1'].find(x => fontsSupported.includes(x)),
+					['8']: windowsFonts['8'].find(x => fontsSupported.includes(x)),
 					// require complete set of Windows 7 fonts
-					['7']: windowsFonts['7'].filter(x => supported.includes(x)).length == windowsFonts['7'].length
+					['7']: windowsFonts['7'].filter(x => fontsSupported.includes(x)).length == windowsFonts['7'].length
 				}
 				const hash = (
 					''+Object.keys(fontVersion).sort().filter(key => !!fontVersion[key])
@@ -159,17 +159,17 @@ const fpworker = (async () => {
 				'Arimo,Ubuntu': 'Ubuntu',
 				'Baskerville,Monaco': 'Android'
 			}
-			const hasAppleFonts = supported.find(x => appleFonts.includes(x))
-			const hasLinuxFonts = supported.find(x => linuxFonts.includes(x))
-			const windowsFontSystem = getWindowsVersion(windowsFonts, supported)
-			const system = (
+			const hasAppleFonts = fontsSupported.find(x => appleFonts.includes(x))
+			const hasLinuxFonts = fontsSupported.find(x => linuxFonts.includes(x))
+			const windowsFontSystem = getWindowsVersion(windowsFonts, fontsSupported)
+			const fontSystem = (
 				windowsFontSystem || (
-					hasLinuxFonts ? (systemHashMap[''+supported] || 'Linux') :
+					hasLinuxFonts ? (systemHashMap[''+fontsSupported] || 'Linux') :
 						hasAppleFonts ? 'Apple' :
-							(systemHashMap[''+supported] || 'unknown')
+							(systemHashMap[''+fontsSupported] || 'unknown')
 				)
 			)
-			return  { supported, system }
+			return  { fontsSupported, fontSystem }
 		})
 
 		const getEmojis = () => {
@@ -190,18 +190,18 @@ const fpworker = (async () => {
 				ask(() => document.createElement('canvas').getContext('2d'))
 			)
 			if (!ctx) return
-			const emojiSums = new Set()
+			const emojiSumSet = new Set()
 			const emojiSet = new Set()
 			ask(() => emojis.forEach(emoji => {
 				const sum = getSum(ctx.measureText(emoji))
-				if (!emojiSums.has(sum)) {
-					emojiSums.add(sum)
+				if (!emojiSumSet.has(sum)) {
+					emojiSumSet.add(sum)
 					return emojiSet.add(emoji)
 				}
 				return
 			}))
-			const metricSum = [...emojiSums].reduce((acc, n) => acc += n, 0)
-			return { unique: [...emojiSet], metricSum }
+			const emojiSum = [...emojiSumSet].reduce((acc, n) => acc += n, 0)
+			return { emojiUnique: [...emojiSet], emojiSum }
 		}
 
 		const [
@@ -221,14 +221,26 @@ const fpworker = (async () => {
 			const mathPI = 3.141592653589793
 			return hashMap[mathPI ** -100] || 'unknown'
 		}
+
+		const {
+			architecture: uaArchitecture,
+			model: uaModel,
+			platform: uaPlatform,
+			platformVersion: uaPlatformVersion,
+			uaFullVersion
+		} = userAgentData || {}
 		
 		return {
 			// Blink
-			canvas,
-			emojis: getEmojis(),
-			fonts: getFonts(),
+			...canvas,
+			...getEmojis(),
+			...getFonts(),
+			uaArchitecture,
+			uaModel,
+			uaPlatform,
+			uaPlatformVersion,
+			uaFullVersion,
 			gpu: getGPU(),
-			userAgentData,
 			deviceMemory: navigator.deviceMemory,
 			// Blink/Gecko
 			hardwareConcurrency: navigator.hardwareConcurrency,
