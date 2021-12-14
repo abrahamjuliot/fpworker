@@ -43,58 +43,123 @@ table {
 	border-spacing: 0;
 }
 
+/* base */
 body {
 	font-family: monospace;
+	line-height: 1.2;
 }
 
 h1, h2, h3, h4, h5, h6 {
 	font-family: sans-serif;
+	font-weight: bold;
+	line-height: 1.5;
 }
-
+h1 {
+	font-size: 32px !important;
+}
+h2 {
+	font-size: 16px !important;
+}
+h3 {
+	font-size: 14px !important;
+}
+/* grid */
 .grid {
 	display: grid;
-	grid-template-columns: repeat(3, 1fr);
-	gap: 20px;
-	padding: 20px;
+	grid-template-columns: repeat(1, 1fr);
+	gap: 0;
+	padding: 20px 0;
 	grid-auto-rows: minmax(100px, auto);
 }
-
 .header,
 .window-scope,
 .dedicated-worker,
 .service-worker,
 .shared-worker {
-	padding: 10px;
+	padding: 20px;
 }
-.header,
+
+.header h1 {
+	color: #6a3fff;
+}
+
 .window-scope {
-	grid-column: 1;	
-}
-.dedicated-worker,
-.service-worker,
-.shared-worker {
-	grid-column: 2 / span 2;
-}
-.header {
-	grid-row: 1;
-}
-.window-scope {
-	grid-row: 2 / 7;
 	background: #6a3fff;
 	color: #fff;
 }
 .dedicated-worker {
-	grid-row: 1 / span 2;
 	background: #d7fffb;
 	color: #8a3dfb
 }
 .service-worker {
-	grid-row: 3 / span 2;
 	background: #bf3ab6;
 	color: #fff;
 }
 .shared-worker {
-	grid-row: 5 / span 2;
 	background: #e8d6ff;
 	color: #7b1c82
 }
+
+@media (min-width: 650px) {
+	h1 {
+		font-size: 40px !important;
+	}
+	h2 {
+		font-size: 20px !important;
+	}
+	h3 {
+		font-size: 16px !important;
+	}
+	.grid {
+		grid-template-columns: repeat(2, 1fr);
+		gap: 20px;
+		padding: 20px;
+	}
+	.header,
+	.window-scope,
+	.dedicated-worker,
+	.service-worker,
+	.shared-worker {
+		padding: 10px;
+	}
+	.header,
+	.window-scope {
+		grid-column: 1;	
+	}
+	.dedicated-worker,
+	.service-worker,
+	.shared-worker {
+		grid-column: 2;
+	}
+	.header {
+		grid-row: 1;
+	}
+	.window-scope {
+		grid-row: 2 / 7;
+	}
+	.dedicated-worker {
+		grid-row: 1 / span 2;
+	}
+	.service-worker {
+		grid-row: 3 / span 2;
+	}
+	.shared-worker {
+		grid-row: 5 / span 2;
+	}
+}
+
+@media (min-width: 900px) {
+	.grid {
+		grid-template-columns: repeat(3, 1fr);
+	}
+	.header,
+	.window-scope {
+		grid-column: 1;	
+	}
+	.dedicated-worker,
+	.service-worker,
+	.shared-worker {
+		grid-column: 2 / span 2;
+	}
+}
+
