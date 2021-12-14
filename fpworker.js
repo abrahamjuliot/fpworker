@@ -64,9 +64,7 @@ const fpworker = (async () => {
 		}
 
 		const getUserAgentData = () => {
-			if (!('userAgentData' in navigator) || !navigator.userAgentData) {
-				return
-			}
+			if (!('userAgentData' in navigator) || !navigator.userAgentData) return
 			return navigator.userAgentData.getHighEntropyValues([
 				'platform',
 				'platformVersion',
@@ -82,7 +80,6 @@ const fpworker = (async () => {
 				// https://docs.microsoft.com/en-us/typography/fonts/windows_11_font_list
 				'7': [
 					'Cambria Math',
-					'Consolas',
 					'Lucida Console'
 				],
 				'8': [
@@ -135,7 +132,8 @@ const fpworker = (async () => {
 					['10']: windowsFonts['10'].find(x => supported.includes(x)),
 					['8.1']: windowsFonts['8.1'].find(x => supported.includes(x)),
 					['8']: windowsFonts['8'].find(x => supported.includes(x)),
-					['7']: windowsFonts['7'].find(x => supported.includes(x))
+					// require complete set of Windows 7 fonts
+					['7']: windowsFonts['7'].filter(x => supported.includes(x)).length == windowsFonts['7'].length
 				}
 				const hash = (
 					''+Object.keys(fontVersion).sort().filter(key => !!fontVersion[key])
