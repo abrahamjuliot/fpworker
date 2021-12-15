@@ -174,15 +174,18 @@ const fpworker = (async () => {
 			if (fontFaceSet.check(`0 '${getRandomValues(1)}'`)) return
 			fontFaceSet.clear()
 			const fontsChecked = fontList.filter(font => fontFaceSet.check(`0 '${font}'`))
+			return  { fontsChecked: fontsChecked.sort() }
+		})
 
-			const getWindowsVersion = (windowsFonts, fontsChecked) => {
+		const getFontSystem = ({ supportedFonts, windowsFonts, appleFonts, linuxFonts, miscFonts }) => {
+			const getWindowsVersion = (windowsFonts, fonts) => {
 				const fontVersion = {
-					['11']: windowsFonts['11'].find(x => fontsChecked.includes(x)),
-					['10']: windowsFonts['10'].find(x => fontsChecked.includes(x)),
-					['8.1']: windowsFonts['8.1'].find(x => fontsChecked.includes(x)),
-					['8']: windowsFonts['8'].find(x => fontsChecked.includes(x)),
+					['11']: windowsFonts['11'].find(x => fonts.includes(x)),
+					['10']: windowsFonts['10'].find(x => fonts.includes(x)),
+					['8.1']: windowsFonts['8.1'].find(x => fonts.includes(x)),
+					['8']: windowsFonts['8'].find(x => fonts.includes(x)),
 					// require complete set of Windows 7 fonts
-					['7']: windowsFonts['7'].filter(x => fontsChecked.includes(x)).length == windowsFonts['7'].length
+					['7']: windowsFonts['7'].filter(x => fonts.includes(x)).length == windowsFonts['7'].length
 				}
 				const hash = (
 					''+Object.keys(fontVersion).sort().filter(key => !!fontVersion[key])
@@ -208,21 +211,47 @@ const fpworker = (async () => {
 				'Arimo,Ubuntu': 'Ubuntu',
 				'Baskerville,Monaco': 'Android'
 			}
-			const hasAppleFonts = fontsChecked.find(x => appleFonts.includes(x))
-			const hasLinuxFonts = fontsChecked.find(x => linuxFonts.includes(x))
-			const windowsFontSystem = getWindowsVersion(windowsFonts, fontsChecked)
+			const hasAppleFonts = supportedFonts.find(x => appleFonts.includes(x))
+			const hasLinuxFonts = supportedFonts.find(x => linuxFonts.includes(x))
+			const windowsFontSystem = getWindowsVersion(windowsFonts, supportedFonts)
 			const fontSystem = (
 				windowsFontSystem || (
-					hasLinuxFonts ? (systemHashMap[''+fontsChecked] || 'Linux') :
+					hasLinuxFonts ? (systemHashMap[''+supportedFonts] || 'Linux') :
 						hasAppleFonts ? 'Apple' :
-							(systemHashMap[''+fontsChecked] || 'unknown')
+							(systemHashMap[''+supportedFonts] || 'unknown')
 				)
 			)
-			return  { fontsChecked: fontsChecked.sort(), fontSystem }
+			return fontSystem
+		}
+
+		const loadFonts = () => ask(async () => {
+			if (!globalThis.FontFace) return
+			const { windowsFonts, appleFonts, linuxFonts, miscFonts } = getSystemFontLists()
+			const fontList = [
+				...Object.keys(windowsFonts).map(key => windowsFonts[key]).flat(),
+				...appleFonts,
+				...linuxFonts,
+				...miscFonts
+			]
+			const fontFaceList = fontList.map(font => new FontFace(font, `local("${font}")`))
+			const responseCollection = await Promise.allSettled(fontFaceList.map(font => font.load()))
+			const fontsLoaded = responseCollection.reduce((acc, font) => {
+				return font.status == 'fulfilled' ? [...acc, font.value.family] : acc
+			}, [])
+			return {
+				fontsLoaded: fontsLoaded.sort(),
+				fontSystem: getFontSystem({
+					supportedFonts: fontsLoaded,
+					windowsFonts,
+					appleFonts,
+					linuxFonts,
+					miscFonts
+				})
+			}
 		})
 
 		const getUserAgentData = () => {
-			if (!('userAgentData' in navigator) || !navigator.userAgentData) return
+			if (!navigator.userAgentData) return
 			return navigator.userAgentData.getHighEntropyValues([
 				'platform',
 				'platformVersion',
@@ -241,10 +270,12 @@ const fpworker = (async () => {
 
 		const [
 			canvasData,
-			userAgentData
+			userAgentData,
+			loadedFonts
 		] = await Promise.all([
 			getCanvasData(canvas, ctx),
-			getUserAgentData()
+			getUserAgentData(),
+			loadFonts()
 		]).catch(error => console.error(error))
 
 		const getEngine = () => {
@@ -272,6 +303,7 @@ const fpworker = (async () => {
 			...canvas,
 			...getEmojis(),
 			...getFonts(),
+			...loadedFonts,
 			...detectFonts(ctx),
 			uaArchitecture,
 			uaModel,
