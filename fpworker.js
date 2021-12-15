@@ -269,6 +269,8 @@ const fpworker = (async () => {
 			// Blink
 			...canvasData,
 			...getEmojis(ctx),
+			...canvas,
+			...getEmojis(),
 			...getFonts(),
 			...detectFonts(ctx),
 			uaArchitecture,
