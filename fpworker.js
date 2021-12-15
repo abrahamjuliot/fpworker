@@ -17,7 +17,9 @@ const fpworker = (async () => {
 			// need to discard unknown gpus
 			return [...gpuSet]
 		}
-		const getCanvas = async () => {
+
+		const getCanvasData = async (canvas, ctx) => {
+			if (!canvas || !ctx) return
 			const getData = async blob => {
 				if (!blob) return
 				const getRead = (method, blob) => new Promise(resolve => {
@@ -41,20 +43,12 @@ const fpworker = (async () => {
 				}
 			}
 			const width = 136, height = 30
-			const canvas = (
-				ask(() => new OffscreenCanvas(width, height)) ||
-				ask(() => document.createElement('canvas'))
-			)
-			if (!canvas) return
-			const ctx = ask(() => canvas.getContext('2d'))
-			if (!ctx) return
 			canvas.width  = 186
 			canvas.height = 30
 			ctx.font = '14px Arial'
 			ctx.fillText(`😃🙌🧠🦄🐉🌊🍧🏄‍♀️🌠🔮`, 0, 20)
 			ctx.fillStyle = 'rgba(0, 0, 0, 0)'
 			ctx.fillRect(0, 0, width, height)
-
 			if (canvas.constructor.name === 'OffscreenCanvas') {
 				return getData(await canvas.convertToBlob())
 			}
@@ -63,20 +57,39 @@ const fpworker = (async () => {
 			})
 		}
 
-		const getUserAgentData = () => {
-			if (!('userAgentData' in navigator) || !navigator.userAgentData) return
-			return navigator.userAgentData.getHighEntropyValues([
-				'platform',
-				'platformVersion',
-				'architecture',
-				'bitness',
-				'model',
-				'uaFullVersion'
-			])
+		const getEmojis = ctx => {
+			if (!ctx) return
+			const emojis = [
+				[128512],[9786],[129333, 8205, 9794, 65039],[9832],[9784],[9895],[8265],[8505],[127987, 65039, 8205, 9895, 65039],[129394],[9785],[9760],[129489, 8205, 129456],[129487, 8205, 9794, 65039],[9975],[129489, 8205, 129309, 8205, 129489],[9752],[9968],[9961],[9972],[9992],[9201],[9928],[9730],[9969],[9731],[9732],[9976],[9823],[9937],[9000],[9993],[9999],[10002],[9986],[9935],[9874],[9876],[9881],[9939],[9879],[9904],[9905],[9888],[9762],[9763],[11014],[8599],[10145],[11013],[9883],[10017],[10013],[9766],[9654],[9197],[9199],[9167],[9792],[9794],[10006],[12336],[9877],[9884],[10004],[10035],[10055],[9724],[9642],[10083],[10084],[9996],[9757],[9997],[10052],[9878],[8618],[9775],[9770],[9774],[9745],[10036],[127344],[127359]
+			].map(emojiCode => String.fromCodePoint(...emojiCode))
+			const getSum = textMetrics => (
+				+(textMetrics.actualBoundingBoxAscent||0)
+				+(textMetrics.actualBoundingBoxDescent||0)
+				+(textMetrics.actualBoundingBoxLeft||0)
+				+(textMetrics.actualBoundingBoxRight||0)
+				+(textMetrics.fontBoundingBoxAscent||0)
+				+(textMetrics.fontBoundingBoxDescent||0)
+				+(textMetrics.width||0)
+			)
+			const emojiSumSet = new Set()
+			const emojiSet = new Set()
+			ask(() => emojis.forEach(emoji => {
+				const sum = getSum(ctx.measureText(emoji))
+				if (!emojiSumSet.has(sum)) {
+					emojiSumSet.add(sum)
+					return emojiSet.add(emoji)
+				}
+				return
+			}))
+			const emojiSum = [...emojiSumSet].reduce((acc, n) => acc += n, 0)
+			return {
+				emojiUnique: [...emojiSet].join(''),
+				emojiSum,
+			}
 		}
-	
-		const getFonts = () => ask(() => {
-			const windowsFonts = {
+
+		const getSystemFontLists = () => ({
+			windowsFonts: {
 				// https://docs.microsoft.com/en-us/typography/fonts/windows_11_font_list
 				'7': [
 					'Cambria Math',
@@ -100,18 +113,54 @@ const fpworker = (async () => {
 					'Ink Free', // 10 (v1803) +-
 				],
 				'11': ['Segoe Fluent Icons']
-			}
-			const appleFonts = ['Helvetica Neue']
-			const linuxFonts = [
+			},
+			appleFonts: ['Helvetica Neue'],
+			linuxFonts: [
 				'Arimo', // ubuntu, chrome os
 				'Jomolhari', // chrome os
 				'Ubuntu' // ubuntu
-			]
-			const miscFonts = [
+			],
+			miscFonts: [
 				'Baskerville', // android + mac
 				'Monaco', // android + mac
 				'Roboto' // chrome OS			
 			]
+		})
+
+		const detectFonts = ctx => {
+			if (!ctx) return
+			const { windowsFonts, appleFonts, linuxFonts, miscFonts } = getSystemFontLists()
+			const fontList = [
+				...Object.keys(windowsFonts).map(key => windowsFonts[key]).flat(),
+				...appleFonts,
+				...linuxFonts,
+				...miscFonts
+			]
+			const getTextMetrics = (ctx, font) => {
+				ctx.font = `256px ${font}`
+				return ctx.measureText('mmmmmmmmmmlli')
+			}
+			const baseFonts = ['monospace', 'sans-serif', 'serif']
+			const base = baseFonts.reduce((acc, font) => {
+				acc[font] = getTextMetrics(ctx, font)
+				return acc
+			}, {})
+			const families = fontList.reduce((acc, font) => {
+				baseFonts.forEach(baseFont => acc.push(`'${font}', ${baseFont}`))
+				return acc
+			}, [])
+			const detectedFonts = families.reduce((acc, family) => {
+				const basefont = /, (.+)/.exec(family)[1]
+				const dimensions = getTextMetrics(ctx, family)
+				const font = /\'(.+)\'/.exec(family)[1]
+				const detected = dimensions.width != base[basefont].width
+				return !isNaN(dimensions.width) && detected ? acc.add(font) : acc
+			}, new Set())
+			return { fontsDetected: [...detectedFonts].sort() }
+		}
+
+		const getFonts = () => ask(() => {
+			const { windowsFonts, appleFonts, linuxFonts, miscFonts } = getSystemFontLists()
 			const fontList = [
 				...Object.keys(windowsFonts).map(key => windowsFonts[key]).flat(),
 				...appleFonts,
@@ -124,16 +173,16 @@ const fpworker = (async () => {
 				.map(n => n.toString(36)).join('')
 			if (fontFaceSet.check(`0 '${getRandomValues(1)}'`)) return
 			fontFaceSet.clear()
-			const fontsSupported = fontList.filter(font => fontFaceSet.check(`0 '${font}'`))
+			const fontsChecked = fontList.filter(font => fontFaceSet.check(`0 '${font}'`))
 
-			const getWindowsVersion = (windowsFonts, fontsSupported) => {
+			const getWindowsVersion = (windowsFonts, fontsChecked) => {
 				const fontVersion = {
-					['11']: windowsFonts['11'].find(x => fontsSupported.includes(x)),
-					['10']: windowsFonts['10'].find(x => fontsSupported.includes(x)),
-					['8.1']: windowsFonts['8.1'].find(x => fontsSupported.includes(x)),
-					['8']: windowsFonts['8'].find(x => fontsSupported.includes(x)),
+					['11']: windowsFonts['11'].find(x => fontsChecked.includes(x)),
+					['10']: windowsFonts['10'].find(x => fontsChecked.includes(x)),
+					['8.1']: windowsFonts['8.1'].find(x => fontsChecked.includes(x)),
+					['8']: windowsFonts['8'].find(x => fontsChecked.includes(x)),
 					// require complete set of Windows 7 fonts
-					['7']: windowsFonts['7'].filter(x => fontsSupported.includes(x)).length == windowsFonts['7'].length
+					['7']: windowsFonts['7'].filter(x => fontsChecked.includes(x)).length == windowsFonts['7'].length
 				}
 				const hash = (
 					''+Object.keys(fontVersion).sort().filter(key => !!fontVersion[key])
@@ -159,56 +208,42 @@ const fpworker = (async () => {
 				'Arimo,Ubuntu': 'Ubuntu',
 				'Baskerville,Monaco': 'Android'
 			}
-			const hasAppleFonts = fontsSupported.find(x => appleFonts.includes(x))
-			const hasLinuxFonts = fontsSupported.find(x => linuxFonts.includes(x))
-			const windowsFontSystem = getWindowsVersion(windowsFonts, fontsSupported)
+			const hasAppleFonts = fontsChecked.find(x => appleFonts.includes(x))
+			const hasLinuxFonts = fontsChecked.find(x => linuxFonts.includes(x))
+			const windowsFontSystem = getWindowsVersion(windowsFonts, fontsChecked)
 			const fontSystem = (
 				windowsFontSystem || (
-					hasLinuxFonts ? (systemHashMap[''+fontsSupported] || 'Linux') :
+					hasLinuxFonts ? (systemHashMap[''+fontsChecked] || 'Linux') :
 						hasAppleFonts ? 'Apple' :
-							(systemHashMap[''+fontsSupported] || 'unknown')
+							(systemHashMap[''+fontsChecked] || 'unknown')
 				)
 			)
-			return  { fontsSupported: fontsSupported.sort(), fontSystem }
+			return  { fontsChecked: fontsChecked.sort(), fontSystem }
 		})
 
-		const getEmojis = () => {
-			const emojis = [
-				[128512],[9786],[129333, 8205, 9794, 65039],[9832],[9784],[9895],[8265],[8505],[127987, 65039, 8205, 9895, 65039],[129394],[9785],[9760],[129489, 8205, 129456],[129487, 8205, 9794, 65039],[9975],[129489, 8205, 129309, 8205, 129489],[9752],[9968],[9961],[9972],[9992],[9201],[9928],[9730],[9969],[9731],[9732],[9976],[9823],[9937],[9000],[9993],[9999],[10002],[9986],[9935],[9874],[9876],[9881],[9939],[9879],[9904],[9905],[9888],[9762],[9763],[11014],[8599],[10145],[11013],[9883],[10017],[10013],[9766],[9654],[9197],[9199],[9167],[9792],[9794],[10006],[12336],[9877],[9884],[10004],[10035],[10055],[9724],[9642],[10083],[10084],[9996],[9757],[9997],[10052],[9878],[8618],[9775],[9770],[9774],[9745],[10036],[127344],[127359]
-			].map(emojiCode => String.fromCodePoint(...emojiCode))
-			const getSum = textMetrics => (
-				+(textMetrics.actualBoundingBoxAscent||0)
-				+(textMetrics.actualBoundingBoxDescent||0)
-				+(textMetrics.actualBoundingBoxLeft||0)
-				+(textMetrics.actualBoundingBoxRight||0)
-				+(textMetrics.fontBoundingBoxAscent||0)
-				+(textMetrics.fontBoundingBoxDescent||0)
-				+(textMetrics.width||0)
-			)
-			const ctx = (
-				ask(() => new OffscreenCanvas(0, 0).getContext('2d')) ||
-				ask(() => document.createElement('canvas').getContext('2d'))
-			)
-			if (!ctx) return
-			const emojiSumSet = new Set()
-			const emojiSet = new Set()
-			ask(() => emojis.forEach(emoji => {
-				const sum = getSum(ctx.measureText(emoji))
-				if (!emojiSumSet.has(sum)) {
-					emojiSumSet.add(sum)
-					return emojiSet.add(emoji)
-				}
-				return
-			}))
-			const emojiSum = [...emojiSumSet].reduce((acc, n) => acc += n, 0)
-			return { emojiUnique: [...emojiSet].join(''), emojiSum }
+		const getUserAgentData = () => {
+			if (!('userAgentData' in navigator) || !navigator.userAgentData) return
+			return navigator.userAgentData.getHighEntropyValues([
+				'platform',
+				'platformVersion',
+				'architecture',
+				'bitness',
+				'model',
+				'uaFullVersion'
+			])
 		}
 
+		const canvas = (
+			ask(() => new OffscreenCanvas(0, 0)) ||
+			ask(() => document.createElement('canvas'))
+		)
+		const ctx = ask(() => canvas.getContext('2d'))
+
 		const [
-			canvas,
+			canvasData,
 			userAgentData
 		] = await Promise.all([
-			getCanvas(),
+			getCanvasData(canvas, ctx),
 			getUserAgentData()
 		]).catch(error => console.error(error))
 
@@ -232,9 +267,10 @@ const fpworker = (async () => {
 		
 		return {
 			// Blink
-			...canvas,
-			...getEmojis(),
+			...canvasData,
+			...getEmojis(ctx),
 			...getFonts(),
+			...detectFonts(ctx),
 			uaArchitecture,
 			uaModel,
 			uaPlatform,
@@ -305,6 +341,7 @@ const fpworker = (async () => {
 		sharedWorker,
 		serviceWorker
 	}
+	console.log(data)
 	return data
 })()
 
