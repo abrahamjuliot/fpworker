@@ -13,9 +13,9 @@
 	<script>
 		;(async () => {
 			// helpers
-			const getHash = str => {
-				if (typeof str === 'undefined') return
-				const json = `${JSON.stringify(str)}`
+			const getHash = x => {
+				if (!x) return x
+				const json = `${JSON.stringify(x)}`
 				const hash = json.split('').reduce((hash, char, i) => {
 					return Math.imul(31, hash) + json.charCodeAt(i) | 0
 				}, 0x811c9dc5)
@@ -40,7 +40,8 @@
 					canvasReadAsText,
 					emojiUnique,
 					emojiSum,
-					fontsSupported,
+					fontsDetected,
+					fontsChecked,
 					fontSystem,
 					gpu,
 					uaArchitecture,
@@ -62,10 +63,10 @@
 
 				const getMismatchClass = (data, matcher, propName) => {
 					//matcher && propName == 'languages' && console.log(data[propName], matcher[propName])
-					return matcher && ((''+data[propName]) != (''+matcher[propName])) ? 'mismatch' : ''
+					return data && matcher && ((''+data[propName]) != (''+matcher[propName])) ? 'mismatch' : ''
 				}
 				const computeHTML = ({ data, matcher, propName, title = '', hash = false }) => {
-					const metric = data[propName]
+					const metric = data ? data[propName] : ''
 					return `
 					<div class="${getMismatchClass(data, matcher, propName)}">
 						${title || propName}: ${ hash ? getHash(metric) : metric }
@@ -83,8 +84,8 @@
 
 					${computeHTML({ data, matcher, propName: 'deviceMemory' })}
 					${computeHTML({ data, matcher, propName: 'gpu' })}
-
-					${computeHTML({ data, matcher, propName: 'fontsSupported', title: 'fonts' })}
+					${computeHTML({ data, matcher, propName: 'fontsDetected', title: 'fonts detected' })}
+					${computeHTML({ data, matcher, propName: 'fontsChecked', title: 'fonts checked' })}
 					${computeHTML({ data, matcher, propName: 'fontSystem', title: 'font system' })}
 					${computeHTML({ data, matcher, propName: 'uaPlatform', title: 'ua platform' })}
 					${computeHTML({ data, matcher, propName: 'uaPlatformVersion', title: 'ua platform version' })}
