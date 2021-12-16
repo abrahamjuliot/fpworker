@@ -79,10 +79,8 @@ const fpworker = (async () => {
 				}
 				return
 			}))
-			const emojiSum = [...emojiSumSet].reduce((acc, n) => acc += n, 0)
 			return {
-				emojiUnique: [...emojiSet].join(''),
-				emojiSum,
+				emojiUnique: [...emojiSet].join('')
 			}
 		}
 
