@@ -2,15 +2,13 @@ const fpworker = (async () => {
 	// Compute all scopes
 	const ask = fn => { try { return fn() } catch (e) { return } }
 	const getFingerprint = async () => {
-		const getGPU = () => {
+		const getGPU = (canvas1, canvas2) => {
 			const getRenderer = gl => gl.getParameter(
 				gl.getExtension('WEBGL_debug_renderer_info').UNMASKED_RENDERER_WEBGL
 			)
 			const gpuSet = new Set([
-				ask(() => getRenderer(new OffscreenCanvas(0, 0).getContext('webgl'))),
-				ask(() => getRenderer(new OffscreenCanvas(0, 0).getContext('webgl2'))),
-				ask(() => getRenderer(document.createElement('canvas').getContext('webgl'))),
-				ask(() => getRenderer(document.createElement('canvas').getContext('webgl2')))
+				ask(() => getRenderer(canvas1.getContext('webgl'))),
+				ask(() => getRenderer(canvas2.getContext('webgl2')))
 			])
 			gpuSet.delete() // discard undefined
 			// find 1st trusted if size > 1
@@ -262,18 +260,26 @@ const fpworker = (async () => {
 			])
 		}
 
-		const canvas = (
+		const canvas2d = (
 			ask(() => new OffscreenCanvas(0, 0)) ||
 			ask(() => document.createElement('canvas'))
 		)
-		const ctx = ask(() => canvas.getContext('2d'))
+		const ctx2d = ask(() => canvas2d.getContext('2d'))
+		const canvasGl = (
+			ask(() => new OffscreenCanvas(0, 0)) ||
+			ask(() => document.createElement('canvas'))
+		)
+		const canvasGl2 = (
+			ask(() => new OffscreenCanvas(0, 0)) ||
+			ask(() => document.createElement('canvas'))
+		)
 
 		const [
 			canvasData,
 			userAgentData,
 			loadedFonts
 		] = await Promise.all([
-			getCanvasData(canvas, ctx),
+			getCanvasData(canvas2d, ctx2d),
 			getUserAgentData(),
 			loadFonts()
 		]).catch(error => console.error(error))
@@ -299,18 +305,17 @@ const fpworker = (async () => {
 		return {
 			// Blink
 			...canvasData,
-			...getEmojis(ctx),
-			...canvas,
+			...getEmojis(ctx2d),
 			...getEmojis(),
 			...getFonts(),
 			...loadedFonts,
-			...detectFonts(ctx),
+			...detectFonts(ctx2d),
 			uaArchitecture,
 			uaModel,
 			uaPlatform,
 			uaPlatformVersion,
 			uaFullVersion,
-			gpu: getGPU(),
+			gpu: getGPU(canvasGl, canvasGl2),
 			deviceMemory: navigator.deviceMemory,
 			// Blink/Gecko
 			hardwareConcurrency: navigator.hardwareConcurrency,
