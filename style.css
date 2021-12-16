@@ -109,6 +109,7 @@ h3 {
 	box-shadow: 0 6px 15px rgba(36, 37, 38, 0.08);
     padding: 10px;
     margin: 5px auto;
+	border-radius: 3px;
 }
 .mismatch {
 	background: #fff;
