@@ -181,3 +181,20 @@ h3 {
 	}
 }
 
+@media (min-width: 1200px) {
+	.dedicated-worker,
+	.service-worker { 
+		grid-row: 1 / span 4;
+	}
+	.dedicated-worker {
+		grid-column: 2;
+	}
+	.service-worker {
+		grid-column: 3;
+	}
+	.shared-worker {
+		grid-column: 2 / span 2;
+	}
+}
+
+
