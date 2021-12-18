@@ -116,9 +116,9 @@ const fpworker = (async () => {
 				'Ubuntu' // ubuntu
 			],
 			miscFonts: [
-				'Baskerville', // android + mac
-				'Monaco', // android + mac
-				'Roboto' // chrome OS			
+				'Dancing Script', // android
+				'Droid Sans Mono', // android
+				'Roboto' // android, chrome OS			
 			]
 		})
 
@@ -204,7 +204,7 @@ const fpworker = (async () => {
 			const systemHashMap = {
 				'Arimo,Jomolhari,Roboto': 'Chrome OS',
 				'Arimo,Ubuntu': 'Ubuntu',
-				'Baskerville,Monaco': 'Android'
+				'Dancing Script,Droid Sans Mono,Roboto': 'Android'
 			}
 			const hasAppleFonts = supportedFonts.find(x => appleFonts.includes(x))
 			const hasLinuxFonts = supportedFonts.find(x => linuxFonts.includes(x))
