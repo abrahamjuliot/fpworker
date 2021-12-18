@@ -16,7 +16,7 @@ const fpworker = (async () => {
 			return [...gpuSet]
 		}
 
-		const getCanvasData = async (canvas, ctx) => {
+		const getCanvasData = async ({ canvas, ctx, width = 186, height = 30 }) => {
 			if (!canvas || !ctx) return
 			const getData = async blob => {
 				if (!blob) return
@@ -40,13 +40,12 @@ const fpworker = (async () => {
 					canvasReadAsText
 				}
 			}
-			const width = 136, height = 30
-			canvas.width  = 186
-			canvas.height = 30
+			canvas.width = width
+			canvas.height = height
 			ctx.font = '14px Arial'
 			ctx.fillText(`😃🙌🧠🦄🐉🌊🍧🏄‍♀️🌠🔮`, 0, 20)
 			ctx.fillStyle = 'rgba(0, 0, 0, 0)'
-			ctx.fillRect(0, 0, width, height)
+			ctx.fillRect(0, 0, width-50, height)
 			if (canvas.constructor.name === 'OffscreenCanvas') {
 				return getData(await canvas.convertToBlob())
 			}
@@ -259,16 +258,16 @@ const fpworker = (async () => {
 		}
 
 		const canvas2d = (
-			ask(() => new OffscreenCanvas(0, 0)) ||
+			ask(() => new OffscreenCanvas(186, 30)) ||
 			ask(() => document.createElement('canvas'))
 		)
 		const ctx2d = ask(() => canvas2d.getContext('2d'))
 		const canvasGl = (
-			ask(() => new OffscreenCanvas(0, 0)) ||
+			ask(() => new OffscreenCanvas(30, 30)) ||
 			ask(() => document.createElement('canvas'))
 		)
 		const canvasGl2 = (
-			ask(() => new OffscreenCanvas(0, 0)) ||
+			ask(() => new OffscreenCanvas(30, 30)) ||
 			ask(() => document.createElement('canvas'))
 		)
 
@@ -277,7 +276,7 @@ const fpworker = (async () => {
 			userAgentData,
 			loadedFonts
 		] = await Promise.all([
-			getCanvasData(canvas2d, ctx2d),
+			getCanvasData({ canvas: canvas2d, ctx: ctx2d }),
 			getUserAgentData(),
 			loadFonts()
 		]).catch(error => console.error(error))
