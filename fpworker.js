@@ -362,6 +362,7 @@ const fpworker = (async () => {
 	})
 
 	const scriptSource = '/fpworker.js'
+	console.log(location.pathname)
 	const start = performance.now()
 	const [ windowScope, dedicatedWorker, sharedWorker, serviceWorker ] = await Promise.all([
 		getFingerprint(),
