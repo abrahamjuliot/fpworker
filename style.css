@@ -8,8 +8,8 @@ b, u, i, center,
 dl, dt, dd, ol, ul, li,
 fieldset, form, label, legend,
 table, caption, tbody, tfoot, thead, tr, th, td,
-article, aside, canvas, details, embed, 
-figure, figcaption, footer, header, hgroup, 
+article, aside, canvas, details, embed,
+figure, figcaption, footer, header, hgroup,
 menu, nav, output, ruby, section, summary,
 time, mark, audio, video {
 	margin: 0;
@@ -20,7 +20,7 @@ time, mark, audio, video {
 	vertical-align: baseline;
 }
 /* HTML5 display-role reset for older browsers */
-article, aside, details, figcaption, figure, 
+article, aside, details, figcaption, figure,
 footer, header, hgroup, menu, nav, section {
 	display: block;
 }
@@ -87,6 +87,9 @@ h3 {
 .header h1 {
 	color: #6a3fff;
 }
+.header .perf {
+	color: #bf3ab6;
+}
 
 .window-scope {
 	background: #6a3fff;
@@ -142,7 +145,7 @@ h3 {
 	}
 	.header,
 	.window-scope {
-		grid-column: 1;	
+		grid-column: 1;
 	}
 	.dedicated-worker,
 	.service-worker,
@@ -172,7 +175,7 @@ h3 {
 	}
 	.header,
 	.window-scope {
-		grid-column: 1;	
+		grid-column: 1;
 	}
 	.dedicated-worker,
 	.service-worker,
@@ -183,7 +186,7 @@ h3 {
 
 @media (min-width: 1200px) {
 	.dedicated-worker,
-	.service-worker { 
+	.service-worker {
 		grid-row: 1 / span 4;
 	}
 	.dedicated-worker {

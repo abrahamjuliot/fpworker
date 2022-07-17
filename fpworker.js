@@ -118,7 +118,7 @@ const fpworker = (async () => {
 			miscFonts: [
 				'Dancing Script', // android
 				'Droid Sans Mono', // android
-				'Roboto' // android, chrome OS			
+				'Roboto' // android, chrome OS
 			]
 		})
 
@@ -298,7 +298,7 @@ const fpworker = (async () => {
 			platformVersion: uaPlatformVersion,
 			uaFullVersion
 		} = userAgentData || {}
-		
+
 		return {
 			// Blink
 			...canvasData,
@@ -361,23 +361,22 @@ const fpworker = (async () => {
 		})
 	})
 
-	const scriptSource = document.currentScript.src // '/fpworker.js'
+	const scriptSource = '/fpworker.js'
 	const start = performance.now()
 	const [ windowScope, dedicatedWorker, sharedWorker, serviceWorker ] = await Promise.all([
 		getFingerprint(),
 		getDedicatedWorker({ scriptSource }),
 		getSharedWorker({ scriptSource }),
-		getServiceWorker({ scriptSource, scope: '/' })
+		getServiceWorker({ scriptSource, scope: location.pathname })
 	]).catch(error => console.error(error.message))
 
-	console.log((performance.now() - start).toFixed(2))
 	const data = {
+		perf: (performance.now() - start).toFixed(2),
 		windowScope,
 		dedicatedWorker,
 		sharedWorker,
 		serviceWorker
 	}
-	console.log(data)
 	return data
 })()
 
@@ -387,7 +386,7 @@ await new FontFace('ZWAdobeF', `local("ZWAdobeF")`).load().catch(e => {})
 
 engine version estimate
 textMetrics fonts
-  
+
 matchmedia
 timezone
 

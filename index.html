@@ -9,11 +9,11 @@
 </head>
 <body>
 	<div id="fingerprint" class="grid"></div>
-	<script src="fpworker.js"></script>
+	<script src="./fpworker.js"></script>
 	<script>
-		;(async () => {
+		!async function() {
 			// helpers
-			const getHash = x => {
+			function getHash(x) {
 				if (!x) return x
 				const json = `${JSON.stringify(x)}`
 				const hash = json.split('').reduce((hash, char, i) => {
@@ -21,8 +21,12 @@
 				}, 0x811c9dc5)
 				return ('0000000' + (hash >>> 0).toString(16)).substr(-8)
 			}
-			const patch = (oldEl, newEl) => oldEl.parentNode.replaceChild(newEl, oldEl)
-			const html = (str, ...expressionSet) => {
+
+			function patch(oldEl, newEl) {
+				return oldEl.parentNode.replaceChild(newEl, oldEl)
+			}
+
+			function html(str, ...expressionSet) {
 				const template = document.createElement('template')
 				template.innerHTML = str.map((s, i) => `${s}${expressionSet[i] || ''}`).join('')
 				return document.importNode(template.content, true)
@@ -31,7 +35,7 @@
 			// fingerprint
 			const fp = await fpworker
 
-			const getTemplate = ({ data, matcher = undefined }) => {
+			function getTemplate({ data, matcher = undefined }) {
 				const {
 					// Blink
 					canvasReadAsArrayBuffer,
@@ -91,7 +95,7 @@
 
 					${computeHTML({ data, matcher, propName: 'deviceMemory' })}
 					${computeHTML({ data, matcher, propName: 'gpu', card: true })}
-					
+
 					${computeHTML({ data, matcher, propName: 'uaPlatform', title: 'ua platform' })}
 					${computeHTML({ data, matcher, propName: 'uaPlatformVersion', title: 'ua platform version' })}
 					${computeHTML({ data, matcher, propName: 'uaArchitecture', title: 'ua architecture' })}
@@ -109,13 +113,11 @@
 					${computeHTML({ data, matcher, propName: 'fontsLoaded', title: 'fonts loaded', card: true })}
 					${computeHTML({ data, matcher, propName: 'fontsChecked', title: 'fonts checked', card: true })}
 					${computeHTML({ data, matcher, propName: 'fontsDetected', title: 'fonts detected', card: true })}
-					
-					
 				`
 			}
 			return patch(document.getElementById('fingerprint'), html`
 				<div id="fingerprint" class="grid">
-					<div class="header"><h1>fpworker</h1></div>
+					<div class="header"><h1>fpworker</h1><span class="perf">${fp.perf}ms</span></div>
 					<div class="window-scope">
 						<h2>Window</h2>
 						${getTemplate({ data: fp.windowScope })}
@@ -134,7 +136,7 @@
 					</div>
 				</div>
 			`)
-		})()
+		}()
 	</script>
 </body>
 </html>
